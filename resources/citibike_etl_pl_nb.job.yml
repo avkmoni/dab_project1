@@ -1,0 +1,67 @@
+resources:
+  jobs:
+    citibike_etl_pl_nb:
+      name: citibike_etl_pl_nb
+      tasks:
+        - task_key: whl_upload
+          python_wheel_task:
+            package_name: dab_project
+            entry_point: main
+          job_cluster_key: ds3_v2_sn
+          libraries:
+            - whl: ../dist/*.whl
+        - task_key: bronze_citibike
+          depends_on:
+            - task_key: whl_upload
+          notebook_task:
+            notebook_path: ../citibike_etl/notebooks/bronze/bronze_citibike.ipynb
+            base_parameters:
+              pipeline_id: "{{job.id}}"
+              run_id: "{{job.run_id}}"
+              task_id: "{{task.run_id}}"
+              processed_timestamp: "{{job.start_time.iso_datetime}}"
+              catalog: "${var.catalog}"
+            source: WORKSPACE           
+          #existing_cluster_id: "${var.all_purpose_cluster_id}"
+          job_cluster_key: ds3_v2_sn
+        - task_key: silver_citibike
+          depends_on:
+            - task_key: bronze_citibike
+          notebook_task:
+            notebook_path: ../citibike_etl\notebooks\silver\silver_citibike.ipynb
+            base_parameters:
+              pipeline_id: "{{job.id}}"
+              run_id: "{{job.run_id}}"
+              task_id: "{{task.run_id}}"
+              processed_timestamp: "{{job.start_time.iso_datetime}}"
+              catalog: "${var.catalog}"
+            source: WORKSPACE
+          job_cluster_key: ds3_v2_sn
+          #libraries:
+          #  - whl: ../dist/*.whl
+          # as wheel task added  this is not required
+        - task_key: gold_citibike_daily_ridesummary
+          depends_on:
+            - task_key: silver_citibike
+          notebook_task:
+            notebook_path: ../citibike_etl\notebooks\gold\gold_citibike_daily_ride_summary.ipynb
+            base_parameters:               
+              catalog:  "${var.catalog}"
+            source: WORKSPACE
+          job_cluster_key: ds3_v2_sn
+        - task_key: gold_citibike_daily_station_perf
+          depends_on:
+            - task_key: silver_citibike
+          notebook_task:
+            notebook_path: ../citibike_etl\notebooks\gold\gold_citibike_daily_station_performance.ipynb
+            base_parameters:               
+              catalog: "${var.catalog}"
+            source: WORKSPACE
+          job_cluster_key: ds3_v2_sn
+      job_clusters:
+        - job_cluster_key: ds3_v2_sn
+          new_cluster: "${var.ds3_v2_sn}" 
+        - job_cluster_key: f4_sn
+          new_cluster: "${var.f4_sn}"           
+      queue:
+        enabled: true

@@ -1,0 +1,70 @@
+# This is a Databricks asset bundle definition for dab_project.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: dab_project
+  uuid: f6fa622d-1145-42e7-bdec-981db308a537
+
+include:
+  - resources/*.yml
+  - resources/*/*.yml
+
+variables:
+  # This is a variable that can be used in the bundle.
+  # It can be used in the bundle definition, or in the resources.
+  # See https://docs.databricks.com/dev-tools/bundles/variables.html for documentation.
+  catalog: 
+      default: "citibike_dev"
+  dev_flag:
+        default: true
+targets:
+  dev:
+    # The default target uses 'mode: development' to create a development copy.
+    # - Deployed resources get prefixed with '[dev my_user_name]'
+    # - Any job schedules and triggers are paused by default.
+    # See also https://docs.databricks.com/dev-tools/bundles/deployment-modes.html.
+    mode: development
+    default: true
+
+    workspace:
+      host: https://adb-4202402577907414.14.azuredatabricks.net 
+      # in development mode, the root_path is not used. if used it should have the userid inthe path.
+      #root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    presets:
+      # Set dynamic_version: true on all artifacts of type "whl".
+      # This makes "bundle deploy" add a timestamp to wheel's version before uploading,
+      # new wheel takes over the previous installation even if actual wheel version is unchanged.
+      # See https://docs.databricks.com/aws/en/dev-tools/bundles/settings
+      artifacts_dynamic_version: true
+  test:
+    mode: production
+    variables:
+      catalog: 
+        default: "citibike_test"
+      dev_flag:
+        default: false
+    presets:
+      name_prefix: '[testing] '
+    workspace:
+      host:  https://adb-2494392599016090.10.azuredatabricks.net/
+      # We explicitly deploy to /Workspace/Users/vaikunda.moni@dxc.com to make sure we only have a single copy.
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: vaikunda.moni@dxc.com
+        level: CAN_MANAGE
+
+  prod:
+    mode: production
+    variables:
+      catalog: 
+        default: "citibike_prod"
+      dev_flag:
+        default: false
+    workspace:
+      host: https://adb-4487886711841737.17.azuredatabricks.net/
+      # We explicitly deploy to /Workspace/Users/vaikunda.moni@dxc.com to make sure we only have a single copy.
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: vaikunda.moni@dxc.com
+        level: CAN_MANAGE
+
+

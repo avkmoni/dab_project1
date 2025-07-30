@@ -1,0 +1,62 @@
+resources:
+  jobs:
+    citibike_etl_pl_py:
+      name: citibike_etl_pl_py
+      tasks:
+        - task_key: bronze_citibike
+          spark_python_task:          
+            python_file: ../citibike_etl/scripts/bronze/bronze_citibike.py
+            parameters:
+              - "{{job.id}}"
+              - "{{job.run_id}}"
+              - "{{task.run_id}}"
+              - "{{job.start_time.iso_datetime}}"
+              - "${var.catalog}"
+            source: WORKSPACE           
+          #existing_cluster_id: "${var.all_purpose_cluster_id}"
+          job_cluster_key: ds3_v2_sn
+        - task_key: silver_citibike
+          depends_on:
+            - task_key: bronze_citibike
+          spark_python_task:
+            python_file: ../citibike_etl\scripts\silver\silver_citibike.py
+            parameters:
+              - "{{job.id}}"
+              - "{{job.run_id}}"
+              - "{{task.run_id}}"
+              - "{{job.start_time.iso_datetime}}"
+              - "${var.catalog}"
+            source: WORKSPACE
+          job_cluster_key: ds3_v2_sn
+          libraries:
+            - whl: ../dist/*.whl
+        - task_key: gold_citibike_daily_ridesummary
+          depends_on:
+            - task_key: silver_citibike
+          spark_python_task:
+            python_file: ../citibike_etl\scripts\gold\gold_citibike_daily_ride_summary.py
+            parameters:               
+              - "${var.catalog}"
+            source: WORKSPACE
+          job_cluster_key: ds3_v2_sn
+        - task_key: gold_citibike_daily_station_perf
+          depends_on:
+            - task_key: silver_citibike
+          spark_python_task:
+            python_file: ../citibike_etl\scripts\gold\gold_citibike_daily_station_performance.py
+            parameters:               
+              - "${var.catalog}"
+            source: WORKSPACE
+          job_cluster_key: ds3_v2_sn
+      job_clusters:
+        - job_cluster_key: ds3_v2_sn
+          new_cluster: "${var.ds3_v2_sn}" 
+        - job_cluster_key: f4_sn
+          new_cluster: "${var.f4_sn}"           
+      queue:
+        enabled: true
+
+
+
+
+
