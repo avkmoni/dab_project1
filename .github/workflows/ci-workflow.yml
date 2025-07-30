@@ -26,7 +26,7 @@ jobs:
           python -m pip install --upgrade pip     
           pip install -r requirements-spark.txt
 
-      - name: Run pytest & generate HTML report
+      - name: Run pytest & generate HTML report generation
         run: |
           pytest \
             --disable-warnings \
