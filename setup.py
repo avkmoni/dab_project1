@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 setup(name="dab_project", 
-        version="0.1",
+        version="0.0.2",
         description="DataBricks Asset Bundle Project",  
         author="Avmoni",
         author_email="vaikunda.moni@dxc.com",
