@@ -34,7 +34,7 @@ jobs:
             --cov-report=html
      
               
-      - name: Upload Coverage HTML rport
+      - name: Upload Coverage HTML report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-html
