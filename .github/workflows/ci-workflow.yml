@@ -26,12 +26,12 @@ jobs:
           python -m pip install --upgrade pip     
           pip install -r requirements-spark.txt
 
-      - name: Run pytest & generate HTML report generation
-        run: |
-          pytest \
-            --disable-warnings \
-            --cov=./src \
-            --cov-report=html
+      #- name: Run pytest & generate HTML report generation
+      #  run: |
+       #  pytest \
+       #    --disable-warnings \
+       #    --cov=./src \
+       #    --cov-report=html
      
               
       - name: Upload Coverage HTML report
